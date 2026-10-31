@@ -1,0 +1,15 @@
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# SQLite WAL and SHM files
+database/*.sqlite-shm
+database/*.sqlite-wal
+
+# Postman local workspace artifacts
+.postman/
+postman/.postman/
+postman/postman/

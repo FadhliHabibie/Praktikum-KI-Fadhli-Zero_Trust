@@ -1,0 +1,97 @@
+🎬 NASKAH LENGKAP VIDEO DEMONSTRASI ZERO TRUST
+================================================================================
+
+1. PEMBUKAAN & SPESIFIKASI SISTEM (± 1 Menit)
+--------------------------------------------------------------------------------
+🖥️ Yang Ditampilkan di Layar:
+Buka VS Code. Tampilkan panel Explorer di sisi kiri (folder gateway, service-nilai, service-transkrip, database) dan Terminal di bawah yang menjalankan npm run start:all.
+
+🗣️ Naskah yang Anda Ucapkan:
+"Assalamualaikum wr. wb. / Halo, perkenalkan nama saya [Nama Anda], NIM [NIM Anda].
+
+Pada video ini, saya mendemonstrasikan tugas praktikum Keamanan Informasi dengan topik Zero Trust Security pada studi kasus Sistem Nilai dan Transkrip Mahasiswa berbasis standar NIST SP 800-207.
+
+Sistem ini dibangun menggunakan arsitektur microservices backend dengan spesifikasi:
+- Platform menggunakan Node.js dan Express.js.
+- Menggunakan SQLite (database.sqlite) sebagai single shared database.
+- Autentikasi menggunakan JWT (JSON Web Token) berumur 10 menit dan Refresh Token berumur 1 hari.
+- Gateway proxy menggunakan library http-proxy-middleware.
+
+Arsitekturnya terdiri dari 3 layanan terpisah:
+- Pertama: API Gateway di port 3000 sebagai Policy Enforcement Point (PEP) dan Policy Engine.
+- Kedua: Service Nilai di port 3001.
+- Ketiga: Service Transkrip di port 3002.
+
+Ketiga service saat ini sudah aktif dan berjalan normal di terminal dengan perintah npm run start:all."
+
+
+2. GAMBARAN ALGORITMA KODE (± 1.5 Menit)
+--------------------------------------------------------------------------------
+🖥️ Yang Ditampilkan di Layar:
+Buka file: gateway/policy/policyEngine.js
+
+🗣️ Naskah yang Anda Ucapkan (Sambil scroll pelan file policyEngine.js):
+"Sebelum melakukan pengujian, mari kita lihat bagaimana algoritma evaluasi keamanan bekerja di API Gateway sebagai Policy Engine:
+
+Algoritma evaluasi ini menerapkan Pipeline Validasi 5 Lapis sebelum request diizinkan:
+
+1. Di baris 33, sistem memvalidasi keabsahan JWT Bearer Token dan memeriksa apakah token sudah kedaluwarsa atau belum.
+2. Di baris 64, sistem melakukan verifikasi perangkat (Never Trust, Always Verify). Header X-Device-ID wajib ada dan harus terdaftar untuk pengguna tersebut di database.
+3. Di baris 94, sistem mengecek Role-Based Access Control (RBAC), memastikan role mahasiswa, dosen, atau admin hanya mengakses endpoint yang sesuai haknya.
+4. Di baris 106, sistem mengecek konteks waktu dinamis. Pengubahan nilai dibatasi hanya pada jam operasional 07.00 sampai 21.00.
+5. Di baris 127, sistem menerapkan Attribute-Based Access Control (ABAC): dosen hanya boleh mengubah kelas yang diampunya, dan nilai yang sudah difinalisasi tidak boleh diubah kembali.
+
+(Buka file: gateway/proxy/proxySetup.js -> sorot baris 11–14)
+
+Jika request lolos semua evaluasi, di file proxySetup.js baris 13, Gateway akan menyisipkan header rahasia X-Gateway-Secret saat meneruskan request ke Service Nilai atau Service Transkrip. Ini untuk mencegah klien luar membypass Gateway.
+
+Sekarang mari kita buktikan implementasinya melalui langkah pengujian di Postman."
+
+
+3. PENGUJIAN 7 LANGKAH DI POSTMAN (± 3 Menit)
+--------------------------------------------------------------------------------
+(Pindahkan layar ke aplikasi Postman)
+
+🟢 LANGKAH 1: Login Mahasiswa (Andi)
+- Folder: 1. Autentikasi & Token
+- Klik: T01 - Login Mahasiswa (Andi) -> Klik SEND
+- Hasil di Layar: 200 OK, muncul access_token (10 menit) dan refresh_token.
+- Bicara: "Langkah 1: Mahasiswa Andi berhasil login dengan perangkat terdaftar, mendapatkan access token 10 menit."
+
+🟢 LANGKAH 2: Uji Perangkat Tidak Terdaftar (Never Trust, Always Verify)
+- Folder: 1. Autentikasi & Token
+- Klik: T05 - Login Gagal (Device Tidak Terdaftar) -> Klik SEND
+- Hasil di Layar: 403 Forbidden (Perangkat DEV-UNKNOWN-HACKER tidak terdaftar).
+- Bicara: "Langkah 2: Saat login dicoba dengan perangkat asing yang tidak terdaftar, Gateway langsung menolak dengan 403 Forbidden."
+
+🟢 LANGKAH 3: Login Dosen (Eko)
+- Folder: 1. Autentikasi & Token
+- Klik: T02 - Login Dosen (Eko) -> Klik SEND
+- Hasil di Layar: 200 OK.
+- Bicara: "Langkah 3: Dosen Eko login dengan perangkatnya, login berhasil 200 OK."
+
+🟢 LANGKAH 4: Uji Jam Operasional (Least Privilege Konteks Waktu)
+- Folder: 2. Akses Data Nilai
+- Klik: T14 - Dosen Ubah Nilai di Luar Jam Akses -> Klik SEND
+- Hasil di Layar: 403 Forbidden (Akses ditolak di luar jam operasional (07:00 - 21:00)).
+- Bicara: "Langkah 4: Dosen mencoba mengubah nilai di luar jam operasional yang disimulasikan jam 23.00, sistem menolak dengan 403 Forbidden."
+
+🟢 LANGKAH 5: Uji Pencegahan Bypass (Assume Breach)
+- Folder: 5. Pencegahan Bypass & Gateway Secret
+- Klik: T26 - Akses Langsung Service Nilai :3001 (Ditolak) -> Klik SEND
+- Hasil di Layar: 403 Forbidden (Semua request wajib melewati API Gateway).
+- Bicara: "Langkah 5: Akses langsung ke port 3001 tanpa melalui Gateway ditolak 403 Forbidden karena tidak membawa header rahasia Gateway Secret."
+
+🟢 LANGKAH 6: Finalisasi Kelas & Sinkronisasi Antar-Layanan
+- Folder: 3. Finalisasi & Sinkronisasi
+- Klik: T19 - Dosen Eko Finalisasi Kelas Ampuan (Berhasil) -> Klik SEND
+- Hasil di Layar: 200 OK (Kelas berhasil difinalisasi dan nilai telah disinkronkan ke transkrip).
+- Bicara: "Langkah 6: Dosen memfinalisasi kelas. Service Nilai otomatis meminta token service ke Gateway dan menyinkronkan nilai ke Service Transkrip."
+
+🟢 LANGKAH 7: Cek Audit Log & Penutup
+- Folder: 1. Autentikasi & Token -> Klik T03 - Login Admin -> Klik SEND (Hasil: 200 OK).
+- Folder: 7. Audit Log -> Klik T33b - Admin Lihat Audit Log (Berhasil) -> Klik SEND.
+- Hasil di Layar: 200 OK, muncul riwayat seluruh keputusan ALLOW dan DENY.
+- Bicara: "Langkah 7: Melalui akun admin, kita melihat bahwa seluruh request tadi—baik yang diizinkan (ALLOW) maupun yang diblokir (DENY)—tercatat lengkap di database audit log.
+
+Sekian demonstrasi tugas praktikum Zero Trust Security Sistem Nilai dari saya. Terima kasih atas perhatiannya, wassalamualaikum wr. wb."

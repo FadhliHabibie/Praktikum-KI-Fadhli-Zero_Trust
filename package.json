@@ -1,0 +1,32 @@
+{
+  "name": "zero-trust-sistem-nilai",
+  "version": "1.0.0",
+  "description": "Praktikum Zero Trust Security - Sistem Nilai dan Transkrip",
+  "main": "gateway/server.js",
+  "scripts": {
+    "start": "node gateway/server.js",
+    "start:gateway": "node gateway/server.js",
+    "start:nilai": "node service-nilai/server.js",
+    "start:transkrip": "node service-transkrip/server.js",
+    "start:all": "node scripts/start-all.js",
+    "seed": "node database/seed.js",
+    "test:all": "node scripts/run-tests.js"
+  },
+  "keywords": [
+    "zero-trust",
+    "api-gateway",
+    "pep",
+    "least-privilege",
+    "jwt"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
